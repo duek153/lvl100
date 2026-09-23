@@ -1,0 +1,1 @@
+{ "name": "LVL100 — הדרך ל-100", "short_name": "LVL100", "start_url": "./", "display": "standalone", "background_color": "#f6f5ff", "theme_color": "#6d4aff", "dir": "rtl", "lang": "he", "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
