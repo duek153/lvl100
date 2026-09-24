@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useGame } from '../store/GameContext';
 import { completeOnboarding } from '../services/game';
 import type { Goal, Profile, SelfLevel } from '../domain/types';
@@ -101,6 +101,9 @@ export default function Onboarding() {
                 </div>
                 <h1>ברוך הבא ל-LVL100</h1>
                 <p className="muted">מתאמנים כמו במשחק, בדרך ל-100+ באמירנט.</p>
+                <Link to="/account" className="btn sm soft">
+                  ☁️ כבר יש לי חשבון? התחברות
+                </Link>
               </div>
               <label className="field">
                 איך לקרוא לך?

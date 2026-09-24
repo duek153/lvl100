@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { UIProvider } from './store/UIContext';
 import { GameProvider, useGame } from './store/GameContext';
+import { CloudProvider } from './store/CloudContext';
 import Layout from './components/Layout';
 import { Loading } from './components/ui';
 import Dashboard from './pages/Dashboard';
@@ -30,6 +31,7 @@ const Achievements = lazy(() => import('./pages/Achievements'));
 const ExamInfo = lazy(() => import('./pages/ExamInfo'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Account = lazy(() => import('./pages/Account'));
 
 function ThemeSync() {
   const { state } = useGame();
@@ -51,7 +53,7 @@ function ThemeSync() {
 function RequireProfile({ children }: { children: ReactNode }) {
   const { state } = useGame();
   const loc = useLocation();
-  if (!state.profile?.onboarded && !loc.pathname.startsWith('/welcome')) return <Navigate to="/welcome" replace state={{ from: loc.pathname + loc.search }} />;
+  if (!state.profile?.onboarded && !loc.pathname.startsWith('/welcome') && !loc.pathname.startsWith('/account')) return <Navigate to="/welcome" replace state={{ from: loc.pathname + loc.search }} />;
   return <>{children}</>;
 }
 
@@ -65,12 +67,14 @@ export default function App() {
   return (
     <UIProvider>
       <GameProvider>
+        <CloudProvider>
         <ThemeSync />
         <HashRouter>
           <ScrollTop />
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/welcome" element={<Onboarding />} />
+              <Route path="/account" element={<Account />} />
               <Route
                 element={
                   <RequireProfile>
@@ -106,6 +110,7 @@ export default function App() {
             </Routes>
           </Suspense>
         </HashRouter>
+        </CloudProvider>
       </GameProvider>
     </UIProvider>
   );

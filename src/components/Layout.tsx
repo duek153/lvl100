@@ -23,6 +23,7 @@ const MORE = [
   { to: '/achievements', ico: '🏆', label: 'גלריית פרסים' },
   { to: '/friends', ico: '👥', label: 'חברים' },
   { to: '/exam', ico: 'ℹ️', label: 'על המבחן' },
+  { to: '/account', ico: '☁️', label: 'חשבון' },
   { to: '/settings', ico: '⚙️', label: 'הגדרות' },
   { to: '/admin', ico: '🛠️', label: 'Admin' },
 ];

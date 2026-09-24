@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCloud } from '../store/CloudContext';
 import { useGame } from '../store/GameContext';
 import { useUI } from '../store/UIContext';
 import type { Settings, ThemeSetting } from '../domain/types';
@@ -13,6 +14,7 @@ const DAY_NAMES = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
 export default function SettingsPage() {
   const { state, update, resetAll, exportState, importState } = useGame();
+  const cloud = useCloud();
   const ui = useUI();
   const nav = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -39,6 +41,24 @@ export default function SettingsPage() {
   return (
     <div className="stack q-wrap">
       <PageHeader title="הגדרות ⚙️" />
+
+      <Link to="/account" className="card link">
+        <div className="row">
+          <div className="emoji-badge">☁️</div>
+          <div style={{ flex: 1 }}>
+            <b>חשבון וסנכרון</b>
+            <div className="faint">
+              {cloud.status === 'ready' && cloud.profile ? (
+                <>
+                  מחובר כ-<span dir="ltr">@{cloud.profile.username}</span> · {cloud.error ? 'שגיאת סנכרון' : 'מסונכרן'}
+                </>
+              ) : (
+                'לא מחובר. התחבר כדי לשמור בענן ולהתחרות בחברים'
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
 
       <div className="card stack">
         <h2>הפרופיל שלי</h2>

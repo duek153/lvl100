@@ -8,6 +8,7 @@ import { dailyQuest } from '../domain/quests';
 import { computeReadiness } from '../domain/readiness';
 import { stageViews, currentStage } from '../domain/road';
 import { buildBoard } from '../domain/leaderboard';
+import { useBoard } from '../store/useBoard';
 import { dailyPlan, daysUntil } from '../domain/plan';
 import { addDays, dayKey } from '../domain/util';
 import { bandFor } from '../data/exam';
@@ -43,7 +44,12 @@ export default function Dashboard() {
   const quest = dailyQuest(state.answers, p, profile, today);
   const readiness = computeReadiness(state.answers, p, profile, today);
   const stage = currentStage(stageViews(state.answers, p));
-  const board = buildBoard('daily', today, { name: profile.name, avatar: profile.avatar, xp: p.days[today]?.xp ?? 0, public: profile.publicProfile }, 10);
+  const todayXp = p.days[today]?.xp ?? 0;
+  const real = useBoard('daily', 'friends');
+  const realFriends = real.ready && real.rows && real.rows.length > 1;
+  const board = realFriends
+    ? real.rows!.map((r) => ({ id: r.user_id, name: r.display_name, avatar: r.avatar, xp: r.is_me ? Math.max(r.xp, todayXp) : r.xp, isMe: r.is_me })).sort((a, b) => b.xp - a.xp)
+    : buildBoard('daily', today, { name: profile.name, avatar: profile.avatar, xp: todayXp, public: profile.publicProfile }, 10);
   const myRank = board.findIndex((r) => r.isMe) + 1;
   const plan = dailyPlan(profile.minutesPerDay, p.ability);
   const daysLeft = daysUntil(profile.examDate, today);
@@ -338,6 +344,15 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+            {!realFriends && (
+              <p className="faint" style={{ marginTop: 8 }}>
+                {real.ready ? (
+                  <Link to="/friends">הוסף חברים כדי לראות אותם כאן במקום יריבים מדומים ←</Link>
+                ) : (
+                  <Link to="/account">התחבר כדי להתחרות בחברים אמיתיים ←</Link>
+                )}
+              </p>
+            )}
             {myRank > 3 && (
               <p className="faint" style={{ marginTop: 8 }}>
                 אתה במקום {myRank}. עוד {board[myRank - 2].xp - board[myRank - 1].xp + 1} XP כדי לעקוף את {board[myRank - 2].name}
