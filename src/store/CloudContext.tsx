@@ -174,7 +174,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
         setError(null);
         const sb = await getClient();
         const { error: e } = await sb.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + window.location.pathname } });
-        if (e) throw new Error(cloudErrorHe(e));
+        if (e) throw Object.assign(new Error(cloudErrorHe(e)), { rateLimited: /rate limit|too many/i.test(e.message) || e.status === 429 });
       },
       verifyCode: async (email, code) => {
         setError(null);

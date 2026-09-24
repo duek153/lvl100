@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCloud } from '../store/CloudContext';
 import { useGame } from '../store/GameContext';
 import { normalizeUsername, validUsername } from '../services/cloud';
+import { formatCountdown, loadCooldown, RATE_LIMIT_MS, remainingMs, RESEND_MS, startCooldown } from '../services/emailCooldown';
 import { En, Loading } from '../components/ui';
 
 export default function Account() {
@@ -13,6 +14,31 @@ export default function Account() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(() => loadCooldown());
+  const [now, setNow] = useState(Date.now());
+  const wait = remainingMs(cooldownUntil, now);
+  useEffect(() => {
+    if (wait <= 0) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [wait > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const requestEmail = () =>
+    run(async () => {
+      if (remainingMs(cooldownUntil) > 0) return;
+      try {
+        await cloud.sendCode(email);
+        setCooldownUntil(startCooldown(RESEND_MS));
+        setNow(Date.now());
+        setCodeSent(true);
+      } catch (e) {
+        if ((e as { rateLimited?: boolean }).rateLimited) {
+          setCooldownUntil(startCooldown(RATE_LIMIT_MS));
+          setNow(Date.now());
+        }
+        throw e;
+      }
+    });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [username, setUsername] = useState(() => normalizeUsername(state.profile?.name ?? ''));
@@ -75,21 +101,23 @@ export default function Account() {
                 className="card stack"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  run(async () => {
-                    await cloud.sendCode(email);
-                    setCodeSent(true);
-                  });
+                  requestEmail();
                 }}
               >
                 <label className="field" htmlFor="acc-email">
                   כתובת מייל
                   <input id="acc-email" type="text" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
                 </label>
-                <button className="btn lg block" disabled={busy || !/.+@.+\..+/.test(email)}>
-                  {busy ? 'שולח…' : 'שלח לי קוד כניסה'}
+                <button className="btn lg block" disabled={busy || wait > 0 || !/.+@.+\..+/.test(email)}>
+                  {busy ? 'שולח…' : wait > 0 ? <>⏳ אפשר לשלוח שוב בעוד <span className="num en-inline">{formatCountdown(wait)}</span></> : 'שלח לי מייל כניסה'}
                 </button>
+                {wait > 0 && (
+                  <p className="faint" style={{ margin: 0 }}>
+                    {wait > RESEND_MS ? 'הגעת למגבלת המיילים של Supabase. אם כבר קיבלת מייל, אפשר להשתמש בקישור שבו.' : 'Supabase מאפשר מייל אחד לדקה לכל כתובת.'}
+                  </p>
+                )}
                 <p className="faint" style={{ margin: 0 }}>
-                  בלי סיסמה: נשלח קוד בן 6 ספרות למייל. אם אין לך חשבון, הוא ייווצר אוטומטית.
+                  בלי סיסמה: נשלח לך מייל עם קישור כניסה. אם אין לך חשבון, הוא ייווצר אוטומטית.
                 </p>
               </form>
             ) : (
@@ -109,9 +137,14 @@ export default function Account() {
                 <button className="btn lg block" disabled={busy || code.length < 6}>
                   {busy ? 'בודק…' : 'כניסה'}
                 </button>
-                <button type="button" className="link-btn" onClick={() => (setCodeSent(false), setCode(''))}>
-                  שינוי מייל או שליחה מחדש
-                </button>
+                <div className="row wrap" style={{ justifyContent: 'center' }}>
+                  <button type="button" className="btn sm ghost" disabled={busy || wait > 0} onClick={requestEmail}>
+                    {wait > 0 ? <>⏳ שליחה חוזרת בעוד <span className="num en-inline">{formatCountdown(wait)}</span></> : '📨 שלח שוב'}
+                  </button>
+                  <button type="button" className="link-btn" onClick={() => (setCodeSent(false), setCode(''))}>
+                    שינוי מייל
+                  </button>
+                </div>
               </form>
             )}
           </>
