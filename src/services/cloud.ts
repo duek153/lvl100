@@ -14,7 +14,7 @@ export function getClient(): Promise<SupabaseClient> {
   if (!clientPromise) {
     clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
       createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'lvl100-auth' },
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: 'implicit', storageKey: 'lvl100-auth' },
       }),
     );
   }

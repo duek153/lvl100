@@ -95,8 +95,13 @@ export default function Account() {
             ) : (
               <form className="card stack" onSubmit={(e) => (e.preventDefault(), run(() => cloud.verifyCode(email, code)))}>
                 <p style={{ margin: 0 }}>
-                  שלחנו קוד ל-<b dir="ltr">{email}</b>. בדוק גם בתיקיית הספאם.
+                  שלחנו מייל ל-<b dir="ltr">{email}</b>. בדוק גם בתיקיית הספאם.
                 </p>
+                <div className="notice">
+                  🔗 אם במייל יש <b>קישור</b> (למשל "Confirm email address"), לחץ עליו <b>במכשיר הזה</b>, והוא יכניס אותך אוטומטית.
+                  <br />
+                  🔢 אם במייל יש <b>קוד</b>, הקלד אותו כאן:
+                </div>
                 <label className="field" htmlFor="acc-code">
                   הקוד מהמייל
                   <input id="acc-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength={10} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} style={{ fontSize: '1.6rem', letterSpacing: 8, textAlign: 'center' }} autoFocus />

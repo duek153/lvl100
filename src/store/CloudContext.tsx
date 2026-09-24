@@ -15,6 +15,7 @@ import {
   saveMarker,
   type CloudProfile,
 } from '../services/cloud';
+import { hasPendingAuth, takePendingAuth } from '../services/authRedirect';
 
 export type CloudStatus = 'loading' | 'signedOut' | 'needsProfile' | 'ready';
 
@@ -39,6 +40,7 @@ const Ctx = createContext<CloudCtx | null>(null);
 
 // Only touch the network if this device has signed in before (keeps first load light).
 const HAS_SESSION = () => {
+  if (hasPendingAuth()) return true;
   try {
     return !!localStorage.getItem('lvl100-auth');
   } catch {
@@ -118,6 +120,14 @@ export function CloudProvider({ children }: { children: ReactNode }) {
     (async () => {
       try {
         const sb = await getClient();
+        const pending = takePendingAuth();
+        if (pending.error) {
+          setError(/expired|invalid/i.test(pending.error) ? 'הקישור פג תוקף או שכבר נעשה בו שימוש. בקש מייל חדש.' : 'הכניסה דרך הקישור נכשלה. בקש מייל חדש.');
+        }
+        if (pending.tokens) {
+          const { error: se } = await sb.auth.setSession(pending.tokens);
+          if (se) setError(cloudErrorHe(se));
+        }
         const { data } = await sb.auth.getSession();
         if (!alive) return;
         if (!data.session) {
@@ -163,7 +173,7 @@ export function CloudProvider({ children }: { children: ReactNode }) {
       sendCode: async (email) => {
         setError(null);
         const sb = await getClient();
-        const { error: e } = await sb.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } });
+        const { error: e } = await sb.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + window.location.pathname } });
         if (e) throw new Error(cloudErrorHe(e));
       },
       verifyCode: async (email, code) => {
