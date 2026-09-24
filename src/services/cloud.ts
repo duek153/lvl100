@@ -302,7 +302,7 @@ export function validUsername(s: string): boolean {
 /** Friendly Hebrew message for auth / network errors. */
 export function cloudErrorHe(e: unknown): string {
   const msg = (e as { message?: string })?.message ?? String(e);
-  if (/rate limit|too many/i.test(msg)) return 'נשלחו יותר מדי בקשות. חכה דקה ונסה שוב.';
+  if (/rate limit|too many/i.test(msg)) return 'הגעת למגבלת שליחת המיילים (בשירות המייל המובנה של Supabase זה כ-2 מיילים בשעה). אם כבר קיבלת מייל, השתמש בקישור שבו. אחרת נסה שוב בעוד שעה.';
   if (/expired|invalid.*(otp|token)|token.*(expired|invalid)/i.test(msg)) return 'הקוד שגוי או שפג תוקפו. בקש קוד חדש.';
   if (/fetch|network|failed to fetch/i.test(msg)) return 'אין חיבור לשרת. בדוק את האינטרנט ונסה שוב.';
   if (/duplicate key|unique/i.test(msg)) return 'שם המשתמש הזה כבר תפוס.';
