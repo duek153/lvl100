@@ -6,6 +6,15 @@ import { normalizeUsername, validUsername } from '../services/cloud';
 import { formatCountdown, loadCooldown, RATE_LIMIT_MS, remainingMs, RESEND_MS, startCooldown } from '../services/emailCooldown';
 import { En, Loading } from '../components/ui';
 
+/** Running as the installed home-screen app (not a browser tab)? */
+function isStandalone(): boolean {
+  try {
+    return window.matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone === true;
+  } catch {
+    return false;
+  }
+}
+
 export default function Account() {
   const cloud = useCloud();
   const { state } = useGame();
@@ -109,7 +118,7 @@ export default function Account() {
                   <input id="acc-email" type="text" inputMode="email" autoComplete="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
                 </label>
                 <button className="btn lg block" disabled={busy || wait > 0 || !/.+@.+\..+/.test(email)}>
-                  {busy ? 'שולח…' : wait > 0 ? <>⏳ אפשר לשלוח שוב בעוד <span className="num en-inline">{formatCountdown(wait)}</span></> : 'שלח לי מייל כניסה'}
+                  {busy ? 'שולח…' : wait > 0 ? <>⏳ אפשר לשלוח שוב בעוד <span className="num en-inline">{formatCountdown(wait)}</span></> : 'שלח לי קוד כניסה'}
                 </button>
                 {wait > 0 && (
                   <p className="faint" style={{ margin: 0 }}>
@@ -117,7 +126,7 @@ export default function Account() {
                   </p>
                 )}
                 <p className="faint" style={{ margin: 0 }}>
-                  בלי סיסמה: נשלח לך מייל עם קישור כניסה. אם אין לך חשבון, הוא ייווצר אוטומטית.
+                  בלי סיסמה: נשלח לך מייל עם קוד כניסה. אם אין לך חשבון, הוא ייווצר אוטומטית. אחרי כניסה אחת המכשיר נזכר, ולא תצטרך להתחבר שוב.
                 </p>
               </form>
             ) : (
@@ -126,12 +135,15 @@ export default function Account() {
                   שלחנו מייל ל-<b dir="ltr">{email}</b>. בדוק גם בתיקיית הספאם.
                 </p>
                 <div className="notice">
-                  🔗 אם במייל יש <b>קישור</b> (למשל "Confirm email address"), לחץ עליו <b>במכשיר הזה</b>, והוא יכניס אותך אוטומטית.
-                  <br />
-                  🔢 אם במייל יש <b>קוד</b>, הקלד אותו כאן:
+                  🔢 העתק את <b>הקוד</b> מהמייל והקלד אותו כאן. ככה נשארים בתוך האפליקציה, והכניסה נשמרת.
                 </div>
+                {isStandalone() && (
+                  <div className="notice warn">
+                    📱 אתה באפליקציה ממסך הבית. <b>אל תלחץ על קישור במייל</b>: הוא נפתח בדפדפן, והכניסה תישמר שם ולא כאן. השתמש בקוד.
+                  </div>
+                )}
                 <label className="field" htmlFor="acc-code">
-                  הקוד מהמייל
+                  קוד הכניסה
                   <input id="acc-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength={10} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} style={{ fontSize: '1.6rem', letterSpacing: 8, textAlign: 'center' }} autoFocus />
                 </label>
                 <button className="btn lg block" disabled={busy || code.length < 6}>
