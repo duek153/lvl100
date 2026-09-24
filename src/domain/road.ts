@@ -48,6 +48,8 @@ export const STAGES: Stage[] = [
   { id: 's9', index: 9, title: 'AmirNet Ready', titleHe: 'מוכנים לאמירנט', emoji: '🎓', skills: ['vocabulary', 'reading', 'restatement'], requiredQuestions: 80, scoreTarget: 125, boss: boss('boss-9', 'Final Boss', '👹', ['vocabulary', 'reading', 'restatement'], 4, 12, 720) },
 ];
 
+export const STAGE_BOSS_IDS = STAGES.map((s) => s.boss.id);
+
 export type StageStatus = 'locked' | 'active' | 'boss' | 'done';
 
 export interface StageView {

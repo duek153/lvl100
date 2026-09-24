@@ -2,20 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../store/GameContext';
 import { loadGrammarTopics } from '../data/content';
-import type { AnswerRecord, GrammarTopic } from '../domain/types';
+import type { GrammarTopic } from '../domain/types';
+import { topicMastery } from '../domain/mastery';
 import { Bar, En, Loading, PageHeader } from '../components/ui';
 
-export function topicMastery(answers: AnswerRecord[], topic: string): { pct: number; n: number } {
-  const rel = answers.filter((a) => a.skill === 'grammar' && a.topic === topic).slice(-15);
-  if (!rel.length) return { pct: 0, n: 0 };
-  let num = 0;
-  let den = 0;
-  for (const a of rel) {
-    den += a.difficulty;
-    if (a.correct) num += a.difficulty;
-  }
-  return { pct: Math.round((num / den) * 100 * Math.min(1, rel.length / 8)), n: answers.filter((a) => a.topic === topic).length };
-}
+export { topicMastery };
 
 export default function Grammar() {
   const { state } = useGame();

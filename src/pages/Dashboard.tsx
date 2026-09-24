@@ -12,6 +12,7 @@ import { dailyPlan, daysUntil } from '../domain/plan';
 import { addDays, dayKey } from '../domain/util';
 import { bandFor } from '../data/exam';
 import { claimQuest } from '../services/game';
+import { achievementViews, nextUp } from '../domain/achievements';
 import { Bar, En, Ring, SkillBar } from '../components/ui';
 
 function greeting(): string {
@@ -47,6 +48,8 @@ export default function Dashboard() {
   const plan = dailyPlan(profile.minutesPerDay, p.ability);
   const daysLeft = daysUntil(profile.examDate, today);
   const band = bandFor(score);
+  const tv = achievementViews(state);
+  const trophies = { got: tv.filter((v) => v.unlockedAt).length, total: tv.length, next: nextUp(tv, 1)[0] };
 
   const startTarget = !profile.placementDone ? '/placement' : quest.tasks.find((t) => !t.done)?.to ?? '/practice';
 
@@ -238,6 +241,35 @@ export default function Dashboard() {
         </div>
 
         <div className="stack">
+          <Link to="/achievements" className="card link">
+            <div className="spread">
+              <div className="row">
+                <div className="emoji-badge" style={{ background: 'var(--warn-soft)' }}>
+                  🏆
+                </div>
+                <div>
+                  <b>גלריית הפרסים</b>
+                  <div className="faint num">
+                    {trophies.got}/{trophies.total} נאספו
+                  </div>
+                </div>
+              </div>
+              <span className="chip primary num">{Math.round((trophies.got / trophies.total) * 100)}%</span>
+            </div>
+            {trophies.next && (
+              <div style={{ marginTop: 10 }}>
+                <div className="spread xs muted">
+                  <span>
+                    הבא: {trophies.next.def.emoji} <span className="en-inline">{trophies.next.def.title}</span>
+                  </span>
+                  <span className="num en-inline">
+                    {trophies.next.value}/{trophies.next.def.target}
+                  </span>
+                </div>
+                <Bar pct={trophies.next.pct} className="thin" label="הפרס הבא" />
+              </div>
+            )}
+          </Link>
           <div className="card">
             <div className="card-title">
               <h2>

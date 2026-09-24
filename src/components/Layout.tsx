@@ -20,7 +20,7 @@ const MORE = [
   { to: '/reading', ico: '📖', label: 'אנסינים' },
   { to: '/simulation', ico: '🎓', label: 'סימולציה' },
   { to: '/ready', ico: '🏅', label: 'מוכנות' },
-  { to: '/achievements', ico: '🎖️', label: 'הישגים' },
+  { to: '/achievements', ico: '🏆', label: 'גלריית פרסים' },
   { to: '/friends', ico: '👥', label: 'חברים' },
   { to: '/exam', ico: 'ℹ️', label: 'על המבחן' },
   { to: '/settings', ico: '⚙️', label: 'הגדרות' },
