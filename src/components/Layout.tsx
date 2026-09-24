@@ -1,4 +1,5 @@
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 import { useGame } from '../store/GameContext';
 import { levelFromXp } from '../domain/levels';
 import { effectiveStreak } from '../domain/streak';
@@ -28,11 +29,61 @@ const MORE = [
   { to: '/admin', ico: '🛠️', label: 'Admin' },
 ];
 
+// Mobile bottom bar: 4 main tabs + "More"; everything else lives in the sheet.
+const MOBILE_TABS = MAIN.filter((l) => l.to !== '/leaderboard');
+const SHEET = [
+  { to: '/leaderboard', ico: '🏆', label: 'דירוג' },
+  { to: '/achievements', ico: '🎖️', label: 'גלריית פרסים' },
+  // Admin stays desktop-only (content management)
+  ...MORE.filter((l) => l.to !== '/achievements' && l.to !== '/admin'),
+];
+
+function MoreSheet({ onClose }: { onClose: () => void }) {
+  const first = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    first.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+  return (
+    <div className="sheet-bg" onClick={onClose}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="כל המסכים" onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-handle" aria-hidden />
+        <div className="spread" style={{ marginBottom: 12 }}>
+          <h2 style={{ margin: 0 }}>כל המסכים</h2>
+          <button className="icon-btn" aria-label="סגירה" onClick={onClose}>
+            ✕
+          </button>
+        </div>
+        <div className="sheet-grid">
+          {SHEET.map((l, i) => (
+            <NavLink key={l.to} to={l.to} ref={i === 0 ? first : undefined} className={({ isActive }) => `sheet-tile ${isActive ? 'active' : ''}`} onClick={onClose}>
+              <span className="ico" aria-hidden>
+                {l.ico}
+              </span>
+              <span>{l.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Layout() {
   const { state } = useGame();
   const lv = levelFromXp(state.progress.xp);
   const streak = effectiveStreak(state.progress.streak, dayKey());
   useReminders();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => setMoreOpen(false), [pathname]);
+  const inSheet = SHEET.some((l) => pathname === l.to || pathname.startsWith(l.to + '/'));
   return (
     <div className="shell">
       <a href="#main" className="skip-link">
@@ -82,7 +133,7 @@ export default function Layout() {
         </main>
       </div>
       <nav className="bottom-nav" aria-label="ניווט תחתון">
-        {MAIN.map((l) => (
+        {MOBILE_TABS.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => (isActive ? 'active' : '')}>
             <span className="ico" aria-hidden>
               {l.ico}
@@ -90,7 +141,14 @@ export default function Layout() {
             {l.label}
           </NavLink>
         ))}
+        <button type="button" className={`more-tab ${inSheet || moreOpen ? 'active' : ''}`} aria-haspopup="dialog" aria-expanded={moreOpen} onClick={() => setMoreOpen(true)}>
+          <span className="ico" aria-hidden>
+            ☰
+          </span>
+          עוד
+        </button>
       </nav>
+      {moreOpen && <MoreSheet onClose={() => setMoreOpen(false)} />}
     </div>
   );
 }
